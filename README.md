@@ -19,7 +19,7 @@ A lightweight, user-friendly Python tool that generates a **clean, visually stru
 
 ## Quick Start
 
-1. **Save the script** as `super_cool_tool.py`
+1. **Save the script** as `filetrace.py`
 2. **Run in terminal**:
    ```bash
    python super_cool_tool.py
