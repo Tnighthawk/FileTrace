@@ -24,9 +24,8 @@ def build_tree(root_dir):
             is_last = (i == len(all_entries) - 1)
             connector = "└── " if is_last else "├── "
             
-            # Determine if this is a directory
-            full_path = os.path.join(directory, entry)
-            is_dir = os.path.isdir(full_path)
+            # Determine if this is a directory (check membership in dirs list)
+            is_dir = entry in dirs
             suffix = "/" if is_dir else ""
             
             # Add the current entry
@@ -35,6 +34,7 @@ def build_tree(root_dir):
             # Recursively process directories
             if is_dir:
                 extension = "    " if is_last else "│   "
+                full_path = os.path.join(directory, entry)
                 add_tree_lines(full_path, prefix + extension)
     
     # Start the recursive tree building
