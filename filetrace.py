@@ -3,33 +3,44 @@ import sys
 
 def build_tree(root_dir):
     """
-    Walks the directory and builds a list of (path, is_last) entries.
+    Builds a properly formatted directory tree structure.
     """
-    tree = []
     root_dir = os.path.abspath(root_dir)
+    lines = []
     
-    for current_root, dirs, files in os.walk(root_dir):
-        # Sort for consistent output
-        dirs.sort()
-        files.sort()
+    def add_tree_lines(directory, prefix=""):
+        """Recursively builds tree lines with proper formatting."""
+        try:
+            entries = os.listdir(directory)
+        except PermissionError:
+            return
         
-        depth = current_root.replace(root_dir, '').count(os.sep)
-        indent = ""
-        if depth > 0:
-            indent = "    " * (depth - 1) + "│   "
+        # Separate and sort directories and files
+        dirs = sorted([e for e in entries if os.path.isdir(os.path.join(directory, e))])
+        files = sorted([e for e in entries if os.path.isfile(os.path.join(directory, e))])
+        all_entries = dirs + files
         
-        dir_name = os.path.basename(current_root) or os.path.basename(root_dir)
-        tree.append((indent, dir_name, True))  # Directory entry (is_last = True for now)
-        
-        # Add files and subdirs
-        entries = dirs + files
-        for i, entry in enumerate(entries):
-            is_last = (i == len(entries) - 1)
+        for i, entry in enumerate(all_entries):
+            is_last = (i == len(all_entries) - 1)
             connector = "└── " if is_last else "├── "
-            prefix = indent + ("    " if depth == 0 else "│   ") if not is_last else indent + "    "
-            tree.append((prefix + connector, entry, is_last))
+            
+            # Determine if this is a directory
+            full_path = os.path.join(directory, entry)
+            is_dir = os.path.isdir(full_path)
+            suffix = "/" if is_dir else ""
+            
+            # Add the current entry
+            lines.append(f"{prefix}{connector}{entry}{suffix}")
+            
+            # Recursively process directories
+            if is_dir:
+                extension = "    " if is_last else "│   "
+                add_tree_lines(full_path, prefix + extension)
     
-    return tree, root_dir
+    # Start the recursive tree building
+    add_tree_lines(root_dir)
+    
+    return lines, root_dir
 
 def print_directory_structure(start_path):
     """
@@ -39,23 +50,17 @@ def print_directory_structure(start_path):
         print(f"Error: The provided path is not a valid directory: {start_path}")
         return
     
-    tree, abs_root = build_tree(start_path)
+    tree_lines, abs_root = build_tree(start_path)
     
     print(f"\nDirectory Structure of: {abs_root}\n")
     
-    for i, (prefix, name, is_last) in enumerate(tree):
-        if i == 0:
-            # Root directory
-            print(f"{name}/")
-            continue
-        
-        # Determine symbol based on type
-        if name in [d for d in os.listdir(abs_root) if os.path.isdir(os.path.join(abs_root, name))]:
-            suffix = "/"
-        else:
-            suffix = ""
-        
-        print(f"{prefix}{name}{suffix}")
+    # Print root directory
+    root_name = os.path.basename(abs_root) or abs_root
+    print(f"{root_name}/")
+    
+    # Print tree structure
+    for line in tree_lines:
+        print(line)
 
 def resolve_input_path(user_input):
     """
